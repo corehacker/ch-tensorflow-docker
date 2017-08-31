@@ -1,10 +1,10 @@
 FROM ubuntu:16.04
 
-MAINTAINER Craig Citro <craigcitro@google.com>
+MAINTAINER Sandeep Prakash <123sandy@gmail.com>
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
-        curl \
+        curl wget vim ssh \
         git \
         libcurl3-dev \
         libfreetype6-dev \
@@ -19,6 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         zlib1g-dev \
         openjdk-8-jdk \
         openjdk-8-jre-headless \
+        autoconf automake autotools-dev libtool gdb valgrind \
+        libevent-dev \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -92,9 +94,6 @@ RUN tensorflow/tools/ci_build/builds/configured CPU \
 
 # corehacker start
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    autoconf automake autotools-dev libtool gdb valgrind
-
 WORKDIR /
 RUN mkdir /corehacker
 
@@ -123,8 +122,6 @@ RUN git clone https://github.com/corehacker/ch-sockmon.git && \
     make install && \
     cd ..
 
-RUN apt-get install -y --no-install-recommends libevent-dev
-
 RUN git clone https://github.com/corehacker/ch-cpp-utils.git && \
     cd ch-cpp-utils && \
     autoreconf --install && \
@@ -132,8 +129,6 @@ RUN git clone https://github.com/corehacker/ch-cpp-utils.git && \
     make && \
     make install && \
     cd ..
-
-RUN apt-get install -y --no-install-recommends wget
 
 RUN wget https://github.com/google/protobuf/releases/download/v3.4.0/protobuf-cpp-3.4.0.tar.gz && \
     tar xvf protobuf-cpp-3.4.0.tar.gz && \
@@ -146,6 +141,13 @@ RUN wget https://github.com/google/protobuf/releases/download/v3.4.0/protobuf-cp
 
 WORKDIR /tensorflow
 RUN bazel build tensorflow/examples/label_image/...
+
+RUN cd tensorflow/examples/label_image/data && \
+    curl -L \
+    "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" \
+    -o inception_v3_2016_08_28_frozen.pb.tar.gz && \
+    tar xvf inception_v3_2016_08_28_frozen.pb.tar.gz && \
+    cd /tensorflow
 # corehacker end
 
 
@@ -154,5 +156,5 @@ EXPOSE 6006
 # IPython
 EXPOSE 8888
 
-WORKDIR /root
+WORKDIR /tensorflow
 CMD ["/bin/bash"]
