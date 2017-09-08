@@ -138,7 +138,6 @@ RUN wget https://github.com/google/protobuf/releases/download/v3.4.0/protobuf-cp
     make install && \
     cd ..
 
-
 WORKDIR /tensorflow
 RUN bazel build tensorflow/examples/label_image/...
 
@@ -148,6 +147,15 @@ RUN cd tensorflow/examples/label_image/data && \
     -o inception_v3_2016_08_28_frozen.pb.tar.gz && \
     tar xvf inception_v3_2016_08_28_frozen.pb.tar.gz && \
     cd /tensorflow
+
+WORKDIR /tensorflow/tensorflow/examples
+RUN git clone https://github.com/corehacker/ch-tf-label-image-client.git && \
+    cd ch-tf-label-image-client && \
+    cp -r ../label_image/data .
+
+WORKDIR /tensorflow
+RUN bazel build tensorflow/examples/ch-tf-label-image-client/...
+
 # corehacker end
 
 
