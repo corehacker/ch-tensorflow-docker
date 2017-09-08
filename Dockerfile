@@ -150,6 +150,9 @@ RUN cd tensorflow/examples/label_image/data && \
     cd /tensorflow
 # corehacker end
 
+WORKDIR /root
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib' >> ~/.bashrc
+
 
 # TensorBoard
 EXPOSE 6006
