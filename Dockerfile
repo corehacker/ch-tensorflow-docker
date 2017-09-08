@@ -1,162 +1,23 @@
-FROM ubuntu:16.04
+FROM bangaloretalkies/tensorflow:latest
 
 MAINTAINER Sandeep Prakash <123sandy@gmail.com>
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential \
-        curl wget vim ssh \
-        git \
-        libcurl3-dev \
-        libfreetype6-dev \
-        libpng12-dev \
-        libzmq3-dev \
-        pkg-config \
-        python-dev \
-        rsync \
-        software-properties-common \
-        unzip \
-        zip \
-        zlib1g-dev \
-        openjdk-8-jdk \
-        openjdk-8-jre-headless \
-        autoconf automake autotools-dev libtool gdb valgrind \
-        libevent-dev \
-        && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN curl -fSsL -O https://bootstrap.pypa.io/get-pip.py && \
-    python get-pip.py && \
-    rm get-pip.py
-
-RUN pip --no-cache-dir install \
-        ipykernel \
-        jupyter \
-        matplotlib \
-        numpy \
-        scipy \
-        sklearn \
-        pandas \
-        && \
-    python -m ipykernel.kernelspec
-
-# Set up our notebook config.
-COPY jupyter_notebook_config.py /root/.jupyter/
-
-# Jupyter has issues with being run directly:
-#   https://github.com/ipython/ipython/issues/7062
-# We just add a little wrapper script.
-COPY run_jupyter.sh /
-
-# Set up Bazel.
-
-# Running bazel inside a `docker build` command causes trouble, cf:
-#   https://github.com/bazelbuild/bazel/issues/134
-# The easiest solution is to set up a bazelrc file forcing --batch.
-RUN echo "startup --batch" >>/etc/bazel.bazelrc
-# Similarly, we need to workaround sandboxing issues:
-#   https://github.com/bazelbuild/bazel/issues/418
-RUN echo "build --spawn_strategy=standalone --genrule_strategy=standalone" \
-    >>/etc/bazel.bazelrc
-# Install the most recent bazel release.
-ENV BAZEL_VERSION 0.5.0
-WORKDIR /
-RUN mkdir /bazel && \
-    cd /bazel && \
-    curl -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" -fSsL -O https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION/bazel-$BAZEL_VERSION-installer-linux-x86_64.sh && \
-    curl -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" -fSsL -o /bazel/LICENSE.txt https://raw.githubusercontent.com/bazelbuild/bazel/master/LICENSE && \
-    chmod +x bazel-*.sh && \
-    ./bazel-$BAZEL_VERSION-installer-linux-x86_64.sh && \
-    cd / && \
-    rm -f /bazel/bazel-$BAZEL_VERSION-installer-linux-x86_64.sh
-
-# Download and build TensorFlow.
-
-RUN git clone https://github.com/tensorflow/tensorflow.git && \
-    cd tensorflow && \
-    git checkout r1.3
-WORKDIR /tensorflow
-
-# TODO(craigcitro): Don't install the pip package, since it makes it
-# more difficult to experiment with local changes. Instead, just add
-# the built directory to the path.
-
-ENV CI_BUILD_PYTHON python
-
-RUN tensorflow/tools/ci_build/builds/configured CPU \
-    bazel build -c opt --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-        tensorflow/tools/pip_package:build_pip_package && \
-    bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/pip && \
-    pip --no-cache-dir install --upgrade /tmp/pip/tensorflow-*.whl && \
-    rm -rf /tmp/pip && \
-    rm -rf /root/.cache
-# Clean up pip wheel and Bazel cache when done.
-
-# corehacker start
-
-WORKDIR /
-RUN mkdir /corehacker
-
-WORKDIR /corehacker
-RUN git clone https://github.com/corehacker/ch-pal.git && \
-    cd ch-pal && \
-    autoreconf --install && \
-    ./configure && \
-    make && \
-    make install && \
-    cd ..
-
-RUN git clone https://github.com/corehacker/ch-utils.git && \
-    cd ch-utils && \
-    autoreconf --install && \
-    ./configure && \
-    make && \
-    make install && \
-    cd ..
-
-RUN git clone https://github.com/corehacker/ch-sockmon.git && \
-    cd ch-sockmon && \
-    autoreconf --install && \
-    ./configure && \
-    make && \
-    make install && \
-    cd ..
-
-RUN git clone https://github.com/corehacker/ch-cpp-utils.git && \
-    cd ch-cpp-utils && \
-    autoreconf --install && \
-    ./configure && \
-    make && \
-    make install && \
-    cd ..
-
-RUN wget https://github.com/google/protobuf/releases/download/v3.4.0/protobuf-cpp-3.4.0.tar.gz && \
-    tar xvf protobuf-cpp-3.4.0.tar.gz && \
-    cd protobuf-3.4.0 && \
-    ./configure && \
-    make && \
-    make install && \
-    cd ..
-
-WORKDIR /tensorflow
-RUN bazel build tensorflow/examples/label_image/...
-
-RUN cd tensorflow/examples/label_image/data && \
-    curl -L \
-    "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" \
-    -o inception_v3_2016_08_28_frozen.pb.tar.gz && \
-    tar xvf inception_v3_2016_08_28_frozen.pb.tar.gz && \
-    cd /tensorflow
-
 WORKDIR /tensorflow/tensorflow/examples
-RUN git clone https://github.com/corehacker/ch-tf-label-image-client.git && \
-    cd ch-tf-label-image-client && \
-    cp -r ../label_image/data .
+RUN git clone https://github.com/corehacker/ch-tf-label-image-client.git
+
 
 WORKDIR /tensorflow
 RUN bazel build tensorflow/examples/ch-tf-label-image-client/...
 
-# corehacker end
+RUN cd tensorflow/examples/ch-tf-label-image-client && \
+    mkdir data && \
+    cd data && \
+    curl -L \
+    "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" \
+    -o inception_v3_2016_08_28_frozen.pb.tar.gz && \
+    tar xvf inception_v3_2016_08_28_frozen.pb.tar.gz && \
+    cp ../../label_image/data/*.jpg . && \
+    cd /tensorflow
 
 WORKDIR /root
 RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib' >> ~/.bashrc
