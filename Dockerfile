@@ -158,6 +158,9 @@ RUN bazel build tensorflow/examples/ch-tf-label-image-client/...
 
 # corehacker end
 
+WORKDIR /root
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib' >> ~/.bashrc
+
 
 # TensorBoard
 EXPOSE 6006
