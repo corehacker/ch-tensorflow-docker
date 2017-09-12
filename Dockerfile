@@ -2,6 +2,16 @@ FROM bangaloretalkies/tensorflow:latest
 
 MAINTAINER Sandeep Prakash <123sandy@gmail.com>
 
+#WORKDIR /corehacker
+#RUN export LD_LIBRARY_PATH=/usr/local/lib && \
+#    git clone https://github.com/corehacker/ch-protos.git && \
+#    cd ch-protos && \
+#    autoreconf --install && \
+#    ./configure && \
+#    make && \
+#    make install && \
+#    cd ..
+
 WORKDIR /tensorflow/tensorflow/examples
 RUN git clone https://github.com/corehacker/ch-tf-label-image-client.git
 
