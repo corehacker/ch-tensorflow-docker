@@ -11,43 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# corehacker start
-
-WORKDIR /
-RUN mkdir /corehacker
-
+RUN mkdir -p /corehacker
 WORKDIR /corehacker
-RUN git clone https://github.com/corehacker/ch-pal.git && \
-    cd ch-pal && \
-    autoreconf --install && \
-    ./configure && \
-    make && \
-    make install && \
-    cd ..
-
-RUN git clone https://github.com/corehacker/ch-utils.git && \
-    cd ch-utils && \
-    autoreconf --install && \
-    ./configure && \
-    make && \
-    make install && \
-    cd ..
-
-RUN git clone https://github.com/corehacker/ch-sockmon.git && \
-    cd ch-sockmon && \
-    autoreconf --install && \
-    ./configure && \
-    make && \
-    make install && \
-    cd ..
-
-RUN git clone https://github.com/corehacker/ch-cpp-utils.git && \
-    cd ch-cpp-utils && \
-    autoreconf --install && \
-    ./configure && \
-    make && \
-    make install && \
-    cd ..
 
 RUN wget https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.tar.gz && \
     tar xvf protobuf-cpp-3.3.0.tar.gz && \
@@ -56,6 +21,14 @@ RUN wget https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cp
     make && \
     make install && \
     cd ..
+
+RUN mkdir glog && \
+    cd glog && \
+    wget https://github.com/google/glog/archive/v0.3.5.tar.gz && \
+    tar xvf v0.3.5.tar.gz && cd glog-0.3.5 && \
+    ./configure && make && make install && \
+    cd ../..
+
 
 # TensorBoard
 EXPOSE 6006

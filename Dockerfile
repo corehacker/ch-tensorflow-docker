@@ -2,6 +2,44 @@ FROM bangaloretalkies/tensorflow-ch-base:latest
 
 MAINTAINER Sandeep Prakash <123sandy@gmail.com>
 
+# corehacker start
+
+WORKDIR /
+RUN mkdir -p /corehacker
+
+WORKDIR /corehacker
+RUN git clone https://github.com/corehacker/ch-pal.git && \
+    cd ch-pal && \
+    autoreconf --force --install && \
+    ./configure && \
+    make && \
+    make install && \
+    cd ..
+
+RUN git clone https://github.com/corehacker/ch-utils.git && \
+    cd ch-utils && \
+    autoreconf --force --install && \
+    ./configure && \
+    make && \
+    make install && \
+    cd ..
+
+RUN git clone https://github.com/corehacker/ch-sockmon.git && \
+    cd ch-sockmon && \
+    autoreconf --force --install && \
+    ./configure && \
+    make && \
+    make install && \
+    cd ..
+
+RUN git clone https://github.com/corehacker/ch-cpp-utils.git && \
+    cd ch-cpp-utils && \
+    autoreconf --force --install && \
+    ./configure && \
+    make && \
+    make install && \
+    cd ..
+
 WORKDIR /root
 RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib' >> ~/.bashrc
 
