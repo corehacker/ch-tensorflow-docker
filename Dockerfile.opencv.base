@@ -1,0 +1,109 @@
+
+FROM ubuntu:16.04
+
+LABEL maintainer="Sandeep Prakash <123sandy@gmail.com>"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        curl \
+        git \
+        libcurl3-dev \
+        libfreetype6-dev \
+        libpng12-dev \
+        libzmq3-dev \
+        pkg-config \
+        python-dev \
+        rsync \
+        software-properties-common \
+        unzip \
+        zip \
+        zlib1g-dev \
+        openjdk-8-jdk \
+        openjdk-8-jre-headless \
+        wget vim ssh \
+        autoconf automake autotools-dev libtool gdb valgrind \
+        libevent-dev \
+        net-tools htop \
+        cmake \
+        libavformat-dev libavcodec-dev libavfilter-dev \
+        libswscale-dev \
+        libjpeg-dev libpng-dev libtiff-dev libjasper-dev \
+        zlib1g-dev libopenexr-dev libxine2-dev \
+        libeigen3-dev libtbb-dev \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN curl -fSsL -O https://bootstrap.pypa.io/get-pip.py && \
+    python get-pip.py && \
+    rm get-pip.py
+
+RUN pip --no-cache-dir install \
+        ipykernel \
+        jupyter \
+        matplotlib \
+        numpy \
+        scipy \
+        sklearn \
+        pandas \
+        && \
+    python -m ipykernel.kernelspec
+
+
+RUN mkdir -p /corehacker
+WORKDIR /corehacker
+
+RUN wget https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.tar.gz && \
+    tar xvf protobuf-cpp-3.3.0.tar.gz && \
+    cd protobuf-3.3.0 && \
+    ./configure && \
+    make && \
+    make install && \
+    cd ..
+
+RUN mkdir glog && \
+    cd glog && \
+    wget https://github.com/google/glog/archive/v0.3.5.tar.gz && \
+    tar xvf v0.3.5.tar.gz && cd glog-0.3.5 && \
+    ./configure && make && make install && \
+    cd ../..
+
+WORKDIR /corehacker
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libtiff5-dev \
+    libavcodec-dev libavformat-dev libswscale-dev \
+    libxine2-dev libv4l-dev \
+    libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev \
+    libqt4-dev libgtk2.0-dev libtbb-dev \
+    libatlas-base-dev \
+    libfaac-dev libmp3lame-dev libtheora-dev \
+    libvorbis-dev libxvidcore-dev \
+    libopencore-amrnb-dev libopencore-amrwb-dev \
+    x264 v4l-utils
+
+RUN mkdir -p /opencv
+WORKDIR /opencv
+
+RUN git clone https://github.com/opencv/opencv.git && \
+    cd opencv && \
+    git checkout 3.3.0 && \
+    cd ..
+    
+RUN git clone https://github.com/opencv/opencv_contrib.git && \
+    cd opencv_contrib && \
+    git checkout 3.3.0 && \
+    cd ..
+    
+RUN cd opencv && mkdir build && cd build && \
+    cmake -D CMAKE_BUILD_TYPE=RELEASE \
+      -D CMAKE_INSTALL_PREFIX=/usr/local \
+      -D INSTALL_C_EXAMPLES=ON \
+      -D INSTALL_PYTHON_EXAMPLES=ON \
+      -D WITH_TBB=ON \
+      -D WITH_V4L=ON \
+      -D WITH_QT=ON \
+      -D WITH_OPENGL=ON \
+      -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
+      -D BUILD_EXAMPLES=ON .. && \
+      make && make install
