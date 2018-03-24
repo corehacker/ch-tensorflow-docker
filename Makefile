@@ -1,24 +1,28 @@
 
+all:
 
+tf_opencv:
+	docker build -f Dockerfile.tf+opencv.docker -t bangaloretalkies/tf_opencv_base .
+	docker push bangaloretalkies/tf_opencv_base:latest
 
-all: default
+tf_opencv_ch:
+	docker build -f Dockerfile.tf+opencv+ch.docker -t bangaloretalkies/tf_opencv_ch .
+	docker push bangaloretalkies/tf_opencv_ch:latest
 
-new: indexer-new
+# tf_opencv_ch
+run_tf_opencv_ch:
+	docker ps
+	docker run -d --volume $(HOME)/workspace:/workspace \
+		--name tf_opencv_ch -ti bangaloretalkies/tf_opencv_ch:latest \
+		tail -f /dev/null
+	docker ps
 
-default: indexer
+exec_tf_opencv_ch:
+	docker exec -ti tf_opencv_ch bash
 
-indexer: base
-	docker build -t bangaloretalkies/tensorflow-ch-indexer .
-	docker push bangaloretalkies/tensorflow-ch-indexer:latest
+stop_tf_opencv_ch:
+	docker ps
+	docker stop tf_opencv_ch
+	docker container rm tf_opencv_ch
+	docker ps
 
-indexer-new:
-	docker build --no-cache -t bangaloretalkies/tensorflow-ch-indexer .
-	docker push bangaloretalkies/tensorflow-ch-indexer:latest
-
-base:
-	docker build -f Dockerfile.base -t bangaloretalkies/tensorflow-ch-base .
-	docker push bangaloretalkies/tensorflow-ch-base:latest
-
-base-new:
-	docker build --co-cache -f Dockerfile.base -t bangaloretalkies/tensorflow-ch-base .
-	docker push bangaloretalkies/tensorflow-ch-base:latest
